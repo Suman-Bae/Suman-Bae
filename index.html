@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>행발 문장 생성기</title>
+  <style>
+    /* 전체 레이아웃 및 배경 설정 */
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #fff0e0;
+      padding: 20px;
+      display: flex;
+      flex-wrap: nowrap;
+      flex-direction: column;
+    }
+
+    /* 상단 색상 탭바 */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 0;
+      margin-bottom: 20px;
+      width: 50%;
+    }
+
+    .nav-tab {
+      flex: 1;
+      height: 40px;
+      border-radius: 8px;
+      cursor: pointer;
+      opacity: 0.6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: black;
+    }  
+
+    .red { background-color: #ff9999; }
+    .orange { background-color: #ffcc99; }
+    .yellow { background-color: #ffff99; }
+    .green { background-color: #ccffcc; }
+    .blue { background-color: #cce5ff; }
+    .navy { background-color: #b3c6ff; }
+    .purple { background-color: #e0ccff; }
+
+    /* 전체 영역 레이아웃 */
+    .main-content {
+      display: flex;
+      flex-wrap: nowrap;
+    }
+
+    .left-panel {
+      width: 75%;
+      max-width: 75%;
+    }
+
+    .right-panel {
+      width: 25%;
+      padding-left: 20px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    /* 학생 카드 영역 */
+    .student-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .student-card {
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 6px;
+      font-size: 13px;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .student-card.selected {
+      background-color: #a2e3a2;
+    }
+
+    /* 학업/인성 탭 */
+    .tabs {
+      margin: 10px 0 5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tabs button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ddd;
+      cursor: pointer;
+    }
+
+    .tabs button.active {
+      background-color: #8942ff;
+      color: white;
+    }
+
+    /* 문장 수 버튼 */
+    .sentence-buttons button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background-color: white;
+      color: orange;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+
+    .sentence-buttons button.selected {
+      background-color: #fcaf62;
+      color: white;      
+    }
+
+    /* 특성 카드 영역 */
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .card {
+      background-color: white;
+      padding: 10px;
+      text-align: center;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .card.selected {
+      background-color: #d0aaff;
+      color: white;
+    }
+
+    /* 행발 생성 버튼 */
+    .generate-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #b174ff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* 사용자 입력 영역 */
+    .custom-input {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    .custom-input input {
+      width: 800px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .custom-input button {
+      padding: 8px 12px;
+      margin-left: 6px;
+      border: none;
+      border-radius: 6px;
+      background-color: #8942ff;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<body>
+  <div class="navbar">
+    <div class="nav-tab red">학생 명렬표</div>
+    <div class="nav-tab orange" style="font-weight: bold;">행발 생성</div>
+    <div class="nav-tab yellow">평어 생성</div>
+    <div class="nav-tab green">준비 중</div>
+    <div class="nav-tab blue">준비 중</div>
+    <div class="nav-tab navy">준비 중</div>
+    <div class="nav-tab purple">준비 중</div>
+  </div>
+
+  <div class="main-content">
+    <div class="left-panel">
+      <h1>학생의 특성을 입력하세요</h1>
+      <div class="student-grid" id="studentGrid"></div>
+
+      <div class="tabs" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button class="tab active" onclick="switchTab('study')">학업 (예체능)</button>
+          <div class="sentence-buttons" id="studySentenceButtons">
+            <button class="selected" onclick="toggleSentence(this, 'study')">2문장</button>
+            <button onclick="toggleSentence(this, 'study')">3문장</button>
+            <button onclick="toggleSentence(this, 'study')">4문장</button>
+          </div>
+        </div>
+        <button class="generate-button" onclick="generateReport()" style="background-color: #8942ff; color: white;">행발 생성 ✨</button>
+      </div>
+      <div class="custom-input-group" id="studyCustomInputs">
+        <div class="custom-input">
+          <input type="text" placeholder="기타 특성을 입력하세요." oninput="updateCustomInput(this, 'study')">
+          <button onclick="addExtraInput(this, 'study')">+</button>
+        </div>
+      </div>
+      <div class="card-container" id="studyContainer"></div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('character')">인성</button>
+        <div class="sentence-buttons" id="characterSentenceButtons">
+          <button class="selected" onclick="toggleSentence(this, 'character')">2문장</button>
+          <button onclick="toggleSentence(this, 'character')">3문장</button>
+          <button onclick="toggleSentence(this, 'character')">4문장</button>
+        </div>
+      </div>
+      <div class="custom-input-group" id="characterCustomInputs">
+        <div class="custom-input">
+          <input type="text" placeholder="기타 특성을 입력하세요." oninput="updateCustomInput(this, 'character')">
+          <button onclick="addExtraInput(this, 'character')">+</button>
+        </div>
+      </div>
+      <div class="card-container" id="characterContainer"></div>
+
+    </div>
+
+    <div class="right-panel">
+      <h3 id="studentTitle">선택 학생의 행발</h3>
+      <textarea
+        id="outputBox"
+        placeholder="행발 생성 버튼을 누르면 행발이 완성됩니다."
+        style="background-color: white; padding: 20px; min-height: 150px; border-radius: 8px; width: 91%; resize: none; font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; font-size: 16px;">
+      </textarea>
+      <div style="display: flex; margin-top: 10px; gap: 10px;">
+        <button id="copyButton" onclick="copyOutput()" style="flex: 1; background-color: white; border: 1px solid #aaa; padding: 10px; border-radius: 6px; cursor: pointer;">복사하기</button>
+        <button onclick="clearOutput()" style="flex: 1; background-color: white; border: 1px solid #aaa; padding: 10px; border-radius: 6px; cursor: pointer;">지우기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 학업 및 인성 특성 정의
+    const studyTraits = ["국어", "수학", "사회", "과학", "독서", "필기", "발표", "모둠 활동", "논리적 사고", "지적 호기심", "정보 수집", "디지털 기기 활용", "창의적 사고", "표현력", "그림", "악기 연주", "가창", "운동 능력", "수업 분위기", "기본 학습 습관"];
+    const characterTraits = ["배려", "협동", "성실", "끈기", "도전", "규칙", "예의", "봉사", "책임", "긍정", "차분", "이해", "공감", "정직", "겸손", "쾌활", "자기 주도", "문제 해결", "공동체 의식", "자기 표현력"];
+
+    // 학생별 데이터를 저장할 Map 객체 (학생 ID -> 학생 데이터)
+    let studentData = new Map();
+    // 현재 선택된 학생의 ID
+    let currentStudentId = 1; // 초기값은 1번 학생
+
+    // 학생 데이터 구조 초기화 함수
+    function initializeStudentData(studentId) {
+        if (!studentData.has(studentId)) {
+            studentData.set(studentId, {
+                selectedStudyTraits: [],
+                selectedCharacterTraits: [],
+                customStudyInputs: [],
+                customCharacterInputs: [],
+                studySentenceCount: 2, // 학업 문장 수 기본값
+                characterSentenceCount: 2, // 인성 문장 수 기본값
+                generatedReport: "" // 생성된 행발 문장 저장 필드 추가
+            });
+        }
+    }
+
+    // 현재 학생의 UI 상태를 데이터로 저장하는 함수
+    function saveCurrentStudentData() {
+        if (!currentStudentId) return; // 선택된 학생이 없으면 저장하지 않음
+
+        const data = studentData.get(currentStudentId);
+        if (!data) return; // 데이터가 없으면 저장하지 않음
+
+        // 선택된 학업 특성 저장
+        data.selectedStudyTraits = Array.from(document.querySelectorAll('#studyContainer .card.selected'))
+                                       .map(card => card.textContent);
+
+        // 선택된 인성 특성 저장
+        data.selectedCharacterTraits = Array.from(document.querySelectorAll('#characterContainer .card.selected'))
+                                          .map(card => card.textContent);
+
+        // 기타 학업 특성 입력값 저장
+        data.customStudyInputs = Array.from(document.querySelectorAll('#studyCustomInputs .custom-input input'))
+                                     .map(input => input.value);
+
+        // 기타 인성 특성 입력값 저장
+        data.customCharacterInputs = Array.from(document.querySelectorAll('#characterCustomInputs .custom-input input'))
+                                         .map(input => input.value);
+        
+        // 학업 문장 수 저장
+        const selectedStudySentenceButton = document.querySelector('#studySentenceButtons button.selected');
+        if (selectedStudySentenceButton) {
+            data.studySentenceCount = parseInt(selectedStudySentenceButton.textContent.replace('문장', ''));
+        }
+
+        // 인성 문장 수 저장
+        const selectedCharacterSentenceButton = document.querySelector('#characterSentenceButtons button.selected');
+        if (selectedCharacterSentenceButton) {
+            data.characterSentenceCount = parseInt(selectedCharacterSentenceButton.textContent.replace('문장', ''));
+        }
+
+        // 현재 출력창의 행발 문장 저장
+        data.generatedReport = document.getElementById('outputBox').value;
+    }
+
+    // 특정 학생의 데이터를 UI에 로드하는 함수
+    function loadStudentData(studentId) {
+        initializeStudentData(studentId); // 데이터가 없으면 초기화
+        const data = studentData.get(studentId);
+
+        // 모든 특성 카드 선택 초기화
+        document.querySelectorAll('.card').forEach(card => card.classList.remove('selected'));
+
+        // 학업 특성 카드 선택 복원
+        data.selectedStudyTraits.forEach(trait => {
+            const card = Array.from(document.querySelectorAll('#studyContainer .card'))
+                                .find(c => c.textContent === trait);
+            if (card) card.classList.add('selected');
+        });
+
+        // 인성 특성 카드 선택 복원
+        data.selectedCharacterTraits.forEach(trait => {
+            const card = Array.from(document.querySelectorAll('#characterContainer .card'))
+                                .find(c => c.textContent === trait);
+            if (card) card.classList.add('selected');
+        });
+
+        // 기타 특성 입력 필드 초기화 및 복원
+        function restoreCustomInputs(containerId, inputValues, type) {
+            const container = document.getElementById(containerId);
+            // 기존 입력 필드 모두 제거 (첫 번째 기본 입력 필드는 남김)
+            Array.from(container.children).slice(1).forEach(child => child.remove());
+            
+            // 첫 번째 입력 필드 값 설정
+            const firstInput = container.querySelector('input');
+            if (firstInput) {
+                firstInput.value = inputValues[0] || '';
+            }
+
+            // 저장된 값에 따라 추가 입력 필드 생성
+            for (let i = 1; i < inputValues.length; i++) {
+                const newInputGroup = document.createElement('div');
+                newInputGroup.className = 'custom-input';
+                newInputGroup.innerHTML = `
+                    <input type="text" placeholder="기타 특성을 입력하세요." value="${inputValues[i]}" oninput="updateCustomInput(this, '${type}')">
+                    <button onclick="addExtraInput(this, '${type}')">+</button>
+                    <button onclick="removeInput(this, '${type}')" style="background-color: #e37474; color: white;">-</button>
+                `;
+                container.appendChild(newInputGroup);
+            }
+        }
+
+        restoreCustomInputs('studyCustomInputs', data.customStudyInputs, 'study');
+        restoreCustomInputs('characterCustomInputs', data.customCharacterInputs, 'character');
+
+        // 문장 수 선택 복원
+        const studySentenceButtons = document.querySelectorAll('#studySentenceButtons button');
+        studySentenceButtons.forEach(btn => {
+            if (parseInt(btn.textContent.replace('문장', '')) === data.studySentenceCount) {
+                btn.classList.add('selected');
+            } else {
+                btn.classList.remove('selected');
+            }
+        });
+
+        const characterSentenceButtons = document.querySelectorAll('#characterSentenceButtons button');
+        characterSentenceButtons.forEach(btn => {
+            if (parseInt(btn.textContent.replace('문장', '')) === data.characterSentenceCount) {
+                btn.classList.add('selected');
+            } else {
+                btn.classList.remove('selected');
+            }
+        });
+
+        // 저장된 행발 문장 복원
+        document.getElementById('outputBox').value = data.generatedReport || "";
+    }
+
+    // 특성 카드 렌더링 함수 정의
+    function renderTraits(containerId, traitsArray) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      traitsArray.forEach((trait, index) => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.draggable = true;
+        div.textContent = trait;
+        div.setAttribute('data-index', index);
+
+        // 클릭 시 선택 토글 및 데이터 저장
+        div.addEventListener('click', () => {
+          div.classList.toggle('selected');
+          saveCurrentStudentData(); // 선택 변경 시 데이터 저장
+        });
+
+        // 우클릭 시 수정
+        div.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          const newTrait = prompt("특성을 수정하세요:", trait);
+          if (newTrait && newTrait.trim() !== '') {
+            traitsArray[index] = newTrait;
+            renderTraits(containerId, traitsArray);
+            saveCurrentStudentData(); // 특성 수정 시 데이터 저장
+          }
+        });
+
+        // 드래그 시작
+        div.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', index.toString());
+        });
+
+        // 드래그 오버 시 시각적 표시
+        div.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          div.style.border = '2px dashed #aaa';
+        });
+
+        // 드래그 나갈 때 스타일 복원
+        div.addEventListener('dragleave', () => {
+          div.style.border = 'none';
+        });
+
+        // 드롭 시 순서 교체
+        div.addEventListener('drop', (e) => {
+          e.preventDefault();
+          div.style.border = 'none';
+          const draggedIndex = +e.dataTransfer.getData('text/plain');
+          const targetIndex = +div.getAttribute('data-index');
+          const temp = traitsArray[draggedIndex];
+          traitsArray[draggedIndex] = traitsArray[targetIndex];
+          traitsArray[targetIndex] = temp;
+          renderTraits(containerId, traitsArray);
+          saveCurrentStudentData(); // 순서 변경 시 데이터 저장
+        });
+
+        container.appendChild(div);
+      });
+    }
+
+    // 초기 특성 렌더링
+    renderTraits('studyContainer', studyTraits);
+    renderTraits('characterContainer', characterTraits);
+
+    // 탭 전환 (추후 확장 가능)
+    function switchTab(tabName) {
+      console.log('Switched to:', tabName);
+    }
+
+    // 문장 수 버튼 토글
+    function toggleSentence(btn, type) {
+      const allButtons = btn.parentElement.querySelectorAll('button');
+      const wasSelected = btn.classList.contains('selected');
+      allButtons.forEach(b => b.classList.remove('selected'));
+      if (!wasSelected) btn.classList.add('selected');
+      saveCurrentStudentData(); // 문장 수 변경 시 데이터 저장
+    }
+
+    // 학생 목록 동적 생성 (1~30)
+    const studentGrid = document.getElementById('studentGrid');
+    for (let i = 1; i <= 30; i++) {
+      const div = document.createElement('div');
+      div.className = 'student-card';
+      div.innerText = `${i}. 홍길동`;
+      div.setAttribute('data-student-id', i); // 학생 ID 설정
+
+      // 학생 선택 시: 기존 학생 데이터 저장, 새 학생 데이터 로드, UI 업데이트
+      div.addEventListener('click', () => {
+        saveCurrentStudentData(); // 현재 학생의 데이터 저장
+
+        const allStudents = document.querySelectorAll('.student-card');
+        allStudents.forEach(card => card.classList.remove('selected'));
+        div.classList.add('selected');
+
+        currentStudentId = i; // 현재 학생 ID 업데이트
+        document.getElementById('studentTitle').innerText = `${i}. 홍길동 학생의 행발`;
+        // document.getElementById('outputBox').value = ""; // 이 줄은 loadStudentData에서 처리되므로 제거
+
+        loadStudentData(currentStudentId); // 새 학생의 데이터 로드 및 UI 복원
+      });
+
+      studentGrid.appendChild(div);
+    }
+
+    // 페이지 로드 시 1번 학생을 기본으로 선택하고 데이터 로드
+    document.addEventListener('DOMContentLoaded', () => {
+        const firstStudentCard = document.querySelector('.student-card[data-student-id="1"]');
+        if (firstStudentCard) {
+            firstStudentCard.classList.add('selected');
+            document.getElementById('studentTitle').innerText = `1. 홍길동 학생의 행발`;
+            currentStudentId = 1;
+            initializeStudentData(currentStudentId); // 1번 학생 데이터 초기화
+            loadStudentData(currentStudentId); // 1번 학생 데이터 로드 (초기에는 비어있음)
+        }
+    });
+
+    // 행발 자동 생성 버튼 클릭 시
+    async function generateReport() { // Make it async
+      const button = document.querySelector('.generate-button');
+      const originalBg = button.style.backgroundColor;
+      button.style.backgroundColor = '#d6b1ff'; // More faded purple
+      setTimeout(() => {
+        button.style.backgroundColor = originalBg;
+      }, 150);
+
+      const studentCard = document.querySelector('.student-card.selected');
+      const outputBox = document.getElementById('outputBox');
+      if (!studentCard) {
+        outputBox.innerText = '학생을 선택해주세요.';
+        return;
+      }
+
+      saveCurrentStudentData(); // Save any pending changes
+      const data = studentData.get(currentStudentId);
+      const studentName = studentCard.innerText.split('.')[1].trim(); // e.g., "홍길동"
+
+      const selectedStudy = data.selectedStudyTraits.join(', ');
+      const customStudy = data.customStudyInputs.filter(val => val.trim() !== '').join(', ');
+      const allStudyTraits = [selectedStudy, customStudy].filter(Boolean).join(', ');
+
+      const selectedCharacter = data.selectedCharacterTraits.join(', ');
+      const customCharacter = data.customCharacterInputs.filter(val => val.trim() !== '').join(', ');
+      const allCharacterTraits = [selectedCharacter, customCharacter].filter(Boolean).join(', ');
+
+      const studySentenceCount = data.studySentenceCount;
+      const characterSentenceCount = data.characterSentenceCount;
+
+      let prompt = `학생 ${studentName}의 학교생활기록부 행동특성 및 종합의견을 작성해 주세요. 다음 특성들을 포함하여 학업 ${studySentenceCount}문장, 인성 ${characterSentenceCount}문장으로 요약하여 긍정적이고 구체적인 문장을 생성해 주세요.`;
+
+      if (allStudyTraits) {
+          prompt += `\n학업 특성: ${allStudyTraits}`;
+      }
+      if (allCharacterTraits) {
+          prompt += `\n인성 특성: ${allCharacterTraits}`;
+      }
+      if (!allStudyTraits && !allCharacterTraits) {
+          prompt += `\n(선택된 특성이 없습니다. 일반적인 긍정적 행동 특성을 바탕으로 작성해 주세요.)`;
+      }
+
+      console.log("생성 프롬프트:", prompt); // 프롬프트 내용 콘솔 출력
+      outputBox.innerText = '행발 문장 생성 중... ✨'; // Loading indicator
+
+      try {
+          let chatHistory = [];
+          chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+          const payload = { contents: chatHistory };
+          // Canvas 환경에서 Gemini API를 호출할 때 API 키는 자동으로 제공됩니다.
+          // 하지만 실제 웹사이트에 배포할 때는 발급받은 본인의 API 키를 여기에 입력해야 합니다.
+          const apiKey = "AIzaSyBfznESweZ6AanToWrdqta8EqSe1f5sPN8"; // <-- 여기에 발급받은 API 키를 붙여넣으세요!
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+          console.log("API 요청 URL:", apiUrl); // API URL 콘솔 출력
+          console.log("API 요청 페이로드:", payload); // API 요청 페이로드 콘솔 출력
+
+          const response = await fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+          });
+
+          console.log("API 응답 상태:", response.status, response.statusText); // 응답 상태 콘솔 출력
+          if (!response.ok) {
+              const errorData = await response.json();
+              console.error("API 응답 오류 데이터:", errorData); // 오류 응답 데이터 콘솔 출력
+              throw new Error(`API 요청 실패: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+          }
+
+          const result = await response.json();
+          console.log("API 응답 결과:", result); // 전체 API 응답 결과 콘솔 출력
+
+          if (result.candidates && result.candidates.length > 0 &&
+              result.candidates[0].content && result.candidates[0].content.parts &&
+              result.candidates[0].content.parts.length > 0) {
+              const text = result.candidates[0].content.parts[0].text;
+              outputBox.innerText = text;
+              data.generatedReport = text; // 생성된 행발 문장을 학생 데이터에 저장
+          } else {
+              outputBox.innerText = '죄송합니다. 행발 문장 생성에 실패했습니다. AI 응답 구조가 예상과 다릅니다.';
+              console.error('Gemini API 응답 구조가 예상과 다릅니다:', result);
+          }
+      } catch (error) {
+          outputBox.innerText = '네트워크 오류 또는 API 호출 중 문제가 발생했습니다. 콘솔을 확인해주세요.';
+          console.error('Gemini API 호출 중 오류 발생:', error);
+      }
+    }
+
+    // 기타 특성 입력창 추가
+    function addExtraInput(button, type) {
+      const parentGroup = button.closest('.custom-input-group');
+      const newInputGroup = document.createElement('div');
+      newInputGroup.className = 'custom-input';
+      newInputGroup.innerHTML = `
+        <input type="text" placeholder="기타 특성을 입력하세요." oninput="updateCustomInput(this, '${type}')">
+        <button onclick="addExtraInput(this, '${type}')">+</button>
+        <button onclick="removeInput(this, '${type}')" style="background-color: #e37474; color: white;">-</button>
+      `;
+      parentGroup.appendChild(newInputGroup);
+      saveCurrentStudentData(); // 입력 필드 구조 변경 시 데이터 저장
+    }
+
+    // 기타 특성 입력창 삭제
+    function removeInput(button, type) {
+      button.parentElement.remove();
+      saveCurrentStudentData(); // 입력 필드 구조 변경 시 데이터 저장
+    }
+
+    // 기타 특성 입력값 변경 시 데이터 업데이트
+    function updateCustomInput(inputElement, type) {
+        saveCurrentStudentData(); // 입력값 변경 시 데이터 저장
+    }
+
+    // 복사하기 버튼 클릭 시: 선택 및 복사 + 보라색 깜빡임 효과
+    function copyOutput() {
+      const output = document.getElementById("outputBox");
+      const button = document.getElementById("copyButton");
+      output.select();
+      document.execCommand("copy");
+      window.getSelection().removeAllRanges();
+
+      // 색상 깜빡임 효과
+      const originalColor = button.style.backgroundColor;
+      button.style.backgroundColor = "#cfa8ff";
+      button.style.color = "white";
+      setTimeout(() => {
+        button.style.backgroundColor = originalColor;
+        button.style.color = "black";
+      }, 150);
+    }
+
+    // 지우기 버튼 클릭 시 출력창 초기화
+    function clearOutput() {
+      document.getElementById("outputBox").value = "";
+      // 저장된 행발 문장도 지우기
+      if (currentStudentId && studentData.has(currentStudentId)) {
+          studentData.get(currentStudentId).generatedReport = "";
+      }
+    }
+  </script>
+</body>
+</html>
